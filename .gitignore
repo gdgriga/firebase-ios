@@ -27,3 +27,6 @@ test-reports
 
 # Artifacts
 *.ipa
+
+# Configuration file, ignored only for the purpose of the workshop
+GoogleService-Info.plist
