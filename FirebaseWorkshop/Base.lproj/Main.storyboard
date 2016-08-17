@@ -53,7 +53,7 @@
                                     <outlet property="delegate" destination="cA6-Mf-9l6" id="pcf-LM-gRw"/>
                                 </connections>
                             </textField>
-                            <view contentMode="scaleToFill" placeholderIntrinsicWidth="240" placeholderIntrinsicHeight="36" translatesAutoresizingMaskIntoConstraints="NO" id="NAo-Tn-93P">
+                            <view contentMode="scaleToFill" placeholderIntrinsicWidth="240" placeholderIntrinsicHeight="36" translatesAutoresizingMaskIntoConstraints="NO" id="NAo-Tn-93P" customClass="GIDSignInButton">
                                 <rect key="frame" x="180" y="269" width="240" height="36"/>
                                 <color key="backgroundColor" red="0.94901960780000005" green="0.95294117649999999" blue="0.96862745100000003" alpha="1" colorSpace="deviceRGB"/>
                             </view>

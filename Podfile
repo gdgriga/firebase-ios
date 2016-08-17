@@ -8,5 +8,6 @@ pod 'MXSegmentedPager'
 
 pod 'Firebase'
 pod 'FirebaseAuth'
+pod 'GoogleSignIn'
 
 end

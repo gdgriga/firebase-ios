@@ -9,14 +9,15 @@
 import UIKit
 import FirebaseAuth
 
-class SignInViewController: UIViewController, UITextFieldDelegate {
+class SignInViewController: UIViewController, UITextFieldDelegate, GIDSignInDelegate, GIDSignInUIDelegate {
 
     @IBOutlet weak var usernameField: UITextField!
     @IBOutlet weak var passwordField: UITextField!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Firebase: Skip screen if logged in
+        GIDSignIn.sharedInstance().uiDelegate = self
+        GIDSignIn.sharedInstance().signInSilently()
     }
 
     @IBAction func signInTapped() {
@@ -46,10 +47,6 @@ class SignInViewController: UIViewController, UITextFieldDelegate {
         }
     }
 
-    @IBAction func googleSignInTapped() {
-        // Firebase: authenticate with Google
-    }
-
     private func signInSuccessful() {
         AppState.sharedInstance.ownUserID = FIRAuth.auth()?.currentUser?.uid
         self.performSegueWithIdentifier("SignedInSegue", sender: self)
@@ -66,5 +63,39 @@ class SignInViewController: UIViewController, UITextFieldDelegate {
             self.signInTapped()
         }
         return true
+    }
+
+    func signIn(signIn: GIDSignIn!, presentViewController viewController: UIViewController!) {
+        self.presentViewController(viewController, animated: true, completion: nil)
+    }
+
+    func signIn(signIn: GIDSignIn!, dismissViewController viewController: UIViewController!) {
+        self.dismissViewControllerAnimated(true, completion: nil)
+    }
+
+    func signIn(signIn: GIDSignIn!, didSignInForUser user: GIDGoogleUser!,
+                withError error: NSError!) {
+        if let error = error {
+            print(error.localizedDescription)
+            return
+        }
+
+        let authentication = user.authentication
+        let credential = FIRGoogleAuthProvider.credentialWithIDToken(authentication.idToken,
+                                                                     accessToken: authentication.accessToken)
+        FIRAuth.auth()?.signInWithCredential(credential) { (user, error) in
+            if let error = error {
+                print(error.localizedDescription)
+                return
+            }
+            self.createUserInCustomDatabase()
+            self.signInSuccessful()
+        }
+    }
+
+    func signIn(signIn: GIDSignIn!, didDisconnectWithUser user:GIDGoogleUser!,
+                withError error: NSError!) {
+        // Perform any operations when the user disconnects from app here.
+        // ...
     }
 }

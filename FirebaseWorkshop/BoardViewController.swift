@@ -97,6 +97,7 @@ class BoardViewController: UIViewController {
 
     @IBAction func signOutTapped() {
         try! FIRAuth.auth()?.signOut()
+        GIDSignIn.sharedInstance().signOut()
         self.dismissViewControllerAnimated(true, completion: nil)
     }
 
