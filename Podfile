@@ -9,5 +9,6 @@ pod 'MXSegmentedPager'
 pod 'Firebase'
 pod 'FirebaseAuth'
 pod 'GoogleSignIn'
+pod 'Firebase/Database'
 
 end
