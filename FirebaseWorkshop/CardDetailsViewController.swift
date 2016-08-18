@@ -49,7 +49,7 @@ class CardDetailsViewController: UIViewController, UIImagePickerControllerDelega
 
     private func userDisplayName(userID: String?) -> String {
         guard let userID = userID,
-            let userDict = MockUserModel[userID],
+            let userDict = AppState.sharedInstance.allUsers[userID],
             let email = userDict[UserKey.Email] as? String else {
                 return "unassigned"
         }
@@ -63,7 +63,7 @@ class CardDetailsViewController: UIViewController, UIImagePickerControllerDelega
     }
 
     private func updateUserKarma() {
-         // use `self.userKarmaPoints(MockUserModel[AppState.sharedInstance.ownUserID!])`
+         // use `self.userKarmaPoints(AppState.sharedInstance.allUsers[AppState.sharedInstance.ownUserID!])`
     }
 
     private func userKarmaPoints(user: [String: AnyObject]) -> Int {
@@ -88,7 +88,7 @@ class CardDetailsViewController: UIViewController, UIImagePickerControllerDelega
         let alertController = UIAlertController(title: "Assignee", message: nil, preferredStyle: .ActionSheet)
         alertController.addAction(UIAlertAction(title: "Cancel", style: .Cancel, handler: nil))
 
-        for (userID, userDict) in MockUserModel {
+        for (userID, userDict) in AppState.sharedInstance.allUsers {
             let userAction = UIAlertAction(title: userDict[UserKey.Email] as? String, style: .Default) { _ in
                 self.applyUserChange(userID)
             }

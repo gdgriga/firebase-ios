@@ -8,6 +8,7 @@
 
 import UIKit
 import FirebaseAuth
+import FirebaseDatabase
 
 class BoardViewController: UIViewController {
 
@@ -17,8 +18,13 @@ class BoardViewController: UIViewController {
     @IBOutlet private weak var addButton: UIBarButtonItem!
     @IBOutlet private weak var avatarImage: UIImageView!
 
+    private var databaseRef: FIRDatabaseReference?
+
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        self.databaseRef = FIRDatabase.database().reference()
+        self.loadUsersFromDatabase()
 
         self.listViewControllers = Collection.all.map() { key in
             let lvc = self.storyboard?.instantiateViewControllerWithIdentifier("ListViewController") as! ListViewController
@@ -32,7 +38,15 @@ class BoardViewController: UIViewController {
             self.addButton.enabled = index <= 1
         }
         self.addPager()
-        self.displayAvatar()
+    }
+
+    private func loadUsersFromDatabase() {
+        self.databaseRef?.child("users").observeEventType(.Value) { (snapshot: FIRDataSnapshot) -> Void in
+            if let users = snapshot.value as? UsersDictionary {
+                AppState.sharedInstance.allUsers = users
+            }
+            self.displayAvatar()
+        }
     }
 
     private func addPager() {
@@ -43,7 +57,7 @@ class BoardViewController: UIViewController {
     }
 
     private func displayAvatar() {
-        let authorizedUser = MockUserModel[AppState.sharedInstance.ownUserID!]
+        let authorizedUser = AppState.sharedInstance.allUsers[AppState.sharedInstance.ownUserID!]
         let karma = authorizedUser?[UserKey.Karma] as? Int ?? 0
         if karma < 0 {
             self.applyPigAvatar()

@@ -12,4 +12,5 @@ class AppState: NSObject {
     static let sharedInstance = AppState()
 
     var ownUserID: String?
+    var allUsers: [String: [String: AnyObject]] = [:]
 }

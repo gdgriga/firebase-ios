@@ -8,6 +8,7 @@
 
 import UIKit
 import FirebaseAuth
+import FirebaseDatabase
 
 class SignInViewController: UIViewController, UITextFieldDelegate, GIDSignInDelegate, GIDSignInUIDelegate {
 
@@ -53,7 +54,17 @@ class SignInViewController: UIViewController, UITextFieldDelegate, GIDSignInDele
     }
 
     private func createUserInCustomDatabase() {
-        // Create a separate entity in non-auth database
+        guard let currentUser = FIRAuth.auth()?.currentUser else { return }
+        let databaseRef = FIRDatabase.database().reference()
+        databaseRef.child("users").child(currentUser.uid).observeSingleEventOfType(.Value, withBlock: { snapshot in
+            if !snapshot.exists() {
+                var userEntry: [String: AnyObject] = [:]
+                userEntry[UserKey.Email] = currentUser.email
+                userEntry[UserKey.Avatar] = currentUser.photoURL?.absoluteString
+                userEntry[UserKey.Karma] = 0
+                snapshot.ref.setValue(userEntry)
+            }
+        })
     }
 
     func textFieldShouldReturn(textField: UITextField) -> Bool {
