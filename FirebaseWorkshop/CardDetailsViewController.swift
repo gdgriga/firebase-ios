@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FirebaseDatabase
 
 class CardDetailsViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
@@ -19,15 +20,18 @@ class CardDetailsViewController: UIViewController, UIImagePickerControllerDelega
     @IBOutlet weak var removeAttachmentButton: UIButton!
 
     var cardItem: [String: String]?
+    var cardSnapshot: FIRDataSnapshot?
     var originalCollection: String?
     var isCreating: Bool = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
         if self.isCreating {
             self.navigationItem.setRightBarButtonItems([self.createButton], animated: false)
         } else {
             self.navigationItem.setRightBarButtonItems([self.deleteButton], animated: false)
+            self.cardItem = self.cardSnapshot?.value as? [String: String]
             if let collection = self.cardItem?[ItemKey.Collection] {
                 self.originalCollection = collection
             }

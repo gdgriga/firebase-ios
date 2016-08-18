@@ -7,10 +7,11 @@
 //
 
 import UIKit
+import FirebaseDatabase
 
 class ListViewController: UITableViewController {
 
-    var model: [[String: String]] = []
+    var model: [FIRDataSnapshot] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -22,7 +23,8 @@ class ListViewController: UITableViewController {
 
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("ListItemCell", forIndexPath: indexPath)
-        cell.textLabel?.text = self.model[indexPath.row][ItemKey.Title] ?? ""
+        let value = self.model[indexPath.row].value as? [String: String]
+        cell.textLabel?.text = value?[ItemKey.Title] ?? ""
         return cell
     }
 
@@ -30,7 +32,7 @@ class ListViewController: UITableViewController {
         if let cell = sender as? UITableViewCell,
             let indexPath = self.tableView.indexPathForCell(cell),
             let destination = segue.destinationViewController as? CardDetailsViewController {
-            destination.cardItem = self.model[indexPath.row]
+            destination.cardSnapshot = self.model[indexPath.row]
         }
     }
 }

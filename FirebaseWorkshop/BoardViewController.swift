@@ -19,6 +19,7 @@ class BoardViewController: UIViewController {
     @IBOutlet private weak var avatarImage: UIImageView!
 
     private var databaseRef: FIRDatabaseReference?
+    private var tasks: [FIRDataSnapshot] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,10 +27,8 @@ class BoardViewController: UIViewController {
         self.databaseRef = FIRDatabase.database().reference()
         self.loadUsersFromDatabase()
 
-        self.listViewControllers = Collection.all.map() { key in
-            let lvc = self.storyboard?.instantiateViewControllerWithIdentifier("ListViewController") as! ListViewController
-            lvc.model = MockListModel.filter() { item in item[ItemKey.Collection] == key }
-            return lvc
+        self.listViewControllers = Collection.all.map() { _ in
+            self.storyboard?.instantiateViewControllerWithIdentifier("ListViewController") as! ListViewController
         }
 
         self.pagerController = PagerController(viewControllers: self.listViewControllers,
@@ -38,6 +37,8 @@ class BoardViewController: UIViewController {
             self.addButton.enabled = index <= 1
         }
         self.addPager()
+
+        self.startUpdatingTasksFromDatabase()
     }
 
     private func loadUsersFromDatabase() {
@@ -46,6 +47,38 @@ class BoardViewController: UIViewController {
                 AppState.sharedInstance.allUsers = users
             }
             self.displayAvatar()
+        }
+    }
+
+    private func startUpdatingTasksFromDatabase() {
+        self.databaseRef?.child("tasks").observeEventType(.ChildAdded) { (snapshot: FIRDataSnapshot) -> Void in
+            self.tasks.append(snapshot)
+            self.updateChildControllers()
+        }
+
+        self.databaseRef?.child("tasks").observeEventType(.ChildRemoved) { (snapshot: FIRDataSnapshot) -> Void in
+            if let index = self.tasks.indexOf({ item -> Bool in item.key == snapshot.key }) {
+                self.tasks.removeAtIndex(index)
+                self.updateChildControllers()
+            }
+        }
+
+        self.databaseRef?.child("tasks").observeEventType(.ChildChanged) { (snapshot: FIRDataSnapshot) -> Void in
+            if let index = self.tasks.indexOf({ item -> Bool in item.key == snapshot.key }) {
+                self.tasks[index] = snapshot
+                self.updateChildControllers()
+            }
+        }
+    }
+
+    private func updateChildControllers() {
+        for (index, key) in Collection.all.enumerate() {
+            let lvc = self.listViewControllers[index]
+            lvc.model = self.tasks.filter() { item in
+                let value = item.value as? [String: String]
+                return value != nil && value![ItemKey.Collection] == key
+            }
+            lvc.tableView.reloadData()
         }
     }
 
