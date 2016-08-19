@@ -62,12 +62,29 @@ class CardDetailsViewController: UIViewController, UIImagePickerControllerDelega
 
     override func viewWillDisappear(animated: Bool) {
         super.viewWillDisappear(animated)
-        self.updateUserKarma()
-        // TODO: save changes in storage
+
+        if !isCreating {
+            self.saveDataToExistingCard()
+        }
+    }
+
+    private func saveDataToExistingCard() {
+        if let cardItem = self.cardItem,
+            let databaseReference = self.cardSnapshot?.ref {
+            self.updateUserKarma()
+            databaseReference.setValue(cardItem)
+        }
     }
 
     private func updateUserKarma() {
-         // use `self.userKarmaPoints(AppState.sharedInstance.allUsers[AppState.sharedInstance.ownUserID!])`
+        if let ownUserID = AppState.sharedInstance.ownUserID,
+            let ownUserDict = AppState.sharedInstance.allUsers[ownUserID] {
+            let newKarmaValue = self.userKarmaPoints(ownUserDict)
+
+            AppState.sharedInstance.allUsers[ownUserID]?[UserKey.Karma] = newKarmaValue
+            let databaseRef = FIRDatabase.database().reference()
+            databaseRef.child("users").child(ownUserID).child(UserKey.Karma).setValue(newKarmaValue)
+        }
     }
 
     private func userKarmaPoints(user: [String: AnyObject]) -> Int {
@@ -117,12 +134,16 @@ class CardDetailsViewController: UIViewController, UIImagePickerControllerDelega
     }
 
     @IBAction func deleteTapped(sender: UIBarButtonItem) {
-        // TODO: delete from storage
+        self.cardSnapshot?.ref.removeValue()
+        self.cardItem = nil
         self.navigationController?.popViewControllerAnimated(true)
     }
 
     @IBAction func createTapped(sender: UIBarButtonItem) {
-        // TODO: Save data
+        if let cardItem = self.cardItem {
+            let databaseRef = FIRDatabase.database().reference()
+            databaseRef.child("tasks").childByAutoId().setValue(cardItem)
+        }
         self.navigationController?.popViewControllerAnimated(true)
     }
 
