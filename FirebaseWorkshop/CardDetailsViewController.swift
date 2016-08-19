@@ -8,6 +8,7 @@
 
 import UIKit
 import FirebaseDatabase
+import FirebaseStorage
 
 class CardDetailsViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
@@ -48,6 +49,24 @@ class CardDetailsViewController: UIViewController, UIImagePickerControllerDelega
                 let listTitle = CollectionTitleMap[collection] {
                 self.listButton.setTitle(listTitle, forState: .Normal)
             }
+
+            if let imageURL = item[ItemKey.Attachment] {
+                self.loadImageAttachment(imageURL)
+                self.removeAttachmentButton.enabled = true
+            } else {
+                self.attachmentImageView.image = nil
+                self.removeAttachmentButton.enabled = false
+            }
+        }
+    }
+
+    private func loadImageAttachment(imageURL: String) {
+        FIRStorage.storage().referenceForURL(imageURL).dataWithMaxSize(INT64_MAX){ (data, error) in
+            if let error = error {
+                print("Error downloading: \(error)")
+                return
+            }
+            self.attachmentImageView.image = UIImage.init(data: data!)
         }
     }
 
@@ -134,6 +153,7 @@ class CardDetailsViewController: UIViewController, UIImagePickerControllerDelega
     }
 
     @IBAction func deleteTapped(sender: UIBarButtonItem) {
+        self.deleteAttachmentFromStorage()
         self.cardSnapshot?.ref.removeValue()
         self.cardItem = nil
         self.navigationController?.popViewControllerAnimated(true)
@@ -161,11 +181,45 @@ class CardDetailsViewController: UIViewController, UIImagePickerControllerDelega
     func imagePickerController(picker: UIImagePickerController,
                                didFinishPickingMediaWithInfo info: [String : AnyObject]) {
         picker.dismissViewControllerAnimated(true, completion:nil)
-        let image = (info[UIImagePickerControllerEditedImage] ?? info[UIImagePickerControllerOriginalImage]) as? UIImage
-        self.attachmentImageView.image = image
+        if let image = (info[UIImagePickerControllerEditedImage] ?? info[UIImagePickerControllerOriginalImage]) as? UIImage {
+            self.deleteAttachmentFromStorage()
+            self.uploadImageToStorage(image)
+        }
+    }
+
+    private func uploadImageToStorage(image: UIImage) {
+        let imageData = UIImageJPEGRepresentation(image, 0.8)
+        let imagePath = "attachments/" + NSUUID().UUIDString + ".jpg"
+        let metadata = FIRStorageMetadata()
+        metadata.contentType = "image/jpeg"
+
+        let storageRef = FIRStorage.storage().referenceForURL("gs://firedrill-7e4e5.appspot.com")
+
+        storageRef.child(imagePath).putData(imageData!, metadata: metadata) { (metadata, error) in
+            if let error = error {
+                print("Error uploading: \(error)")
+                return
+            } else if let path = metadata?.path {
+                self.cardItem?[ItemKey.Attachment] = storageRef.child(path).description
+                self.attachmentImageView.image = image
+            }
+        }
     }
 
     @IBAction func removeAttachmentTapped(sender: UIButton) {
+        self.deleteAttachmentFromStorage()
+        self.cardItem?[ItemKey.Attachment] = nil
+        self.applyCardContent()
+    }
+
+    private func deleteAttachmentFromStorage() {
+        if let imageURL = self.cardItem?[ItemKey.Attachment] {
+            FIRStorage.storage().referenceForURL(imageURL).deleteWithCompletion() { error in
+                if let error = error {
+                    print("Removing attachment failed: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 
     private func applyUserChange(user: String) {
