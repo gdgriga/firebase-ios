@@ -11,5 +11,5 @@ import UIKit
 class AppState: NSObject {
     static let sharedInstance = AppState()
 
-    var ownUserID: String? = "user1"
+    var ownUserID: String?
 }

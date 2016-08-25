@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FirebaseAuth
 
 class BoardViewController: UIViewController {
 
@@ -95,6 +96,7 @@ class BoardViewController: UIViewController {
     }
 
     @IBAction func signOutTapped() {
+        try! FIRAuth.auth()?.signOut()
         self.dismissViewControllerAnimated(true, completion: nil)
     }
 

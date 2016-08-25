@@ -7,5 +7,6 @@ target 'FirebaseWorkshop' do
 pod 'MXSegmentedPager'
 
 pod 'Firebase'
+pod 'FirebaseAuth'
 
 end

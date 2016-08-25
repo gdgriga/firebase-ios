@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import FirebaseAuth
 
 class SignInViewController: UIViewController, UITextFieldDelegate {
 
@@ -19,14 +20,30 @@ class SignInViewController: UIViewController, UITextFieldDelegate {
     }
 
     @IBAction func signInTapped() {
-        // Firebase: perform auth
-        self.signInSuccessful()
+        if let email = self.usernameField.text,
+            let password = self.passwordField.text {
+            FIRAuth.auth()?.signInWithEmail(email, password: password) { (user, error) in
+                if let error = error {
+                    print(error.localizedDescription)
+                    return
+                }
+                self.signInSuccessful()
+            }
+        }
     }
 
     @IBAction func signUpTapped() {
-        // Firebase: perform sign up
-        self.createUserInCustomDatabase()
-        self.signInSuccessful()
+        if let email = self.usernameField.text,
+            let password = self.passwordField.text {
+            FIRAuth.auth()?.createUserWithEmail(email, password: password) { (user, error) in
+                if let error = error {
+                    print(error.localizedDescription)
+                    return
+                }
+                self.createUserInCustomDatabase()
+                self.signInSuccessful()
+            }
+        }
     }
 
     @IBAction func googleSignInTapped() {
@@ -34,6 +51,7 @@ class SignInViewController: UIViewController, UITextFieldDelegate {
     }
 
     private func signInSuccessful() {
+        AppState.sharedInstance.ownUserID = FIRAuth.auth()?.currentUser?.uid
         self.performSegueWithIdentifier("SignedInSegue", sender: self)
     }
 
